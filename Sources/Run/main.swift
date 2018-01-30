@@ -22,4 +22,24 @@ try config.setup()
 let drop = try Droplet(config)
 try drop.setup()
 
+drop.socket("ws") { req, ws in
+    
+    background {
+        while ws.state == .open {
+            try? ws.ping()
+            drop.console.wait(seconds: 10)
+        }
+    }
+    
+    ws.onText = { ws, text in
+        print("WebSocket receive text = \(text)")
+        
+        try ws.send(text)
+    }
+    
+    ws.onClose = { ws, code, reason, clean in
+        print("WebSocket onClose")
+    }
+}
+
 try drop.run()
